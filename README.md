@@ -29,14 +29,28 @@ Ejecuta el pipeline con:
 ## 📂 Estructura del Proyecto
 
 ```
-jazznet-chord-generation/
-│── patterns/       # Archivos MIDI generados
-│── wav/            # Archivos WAV convertidos
-│── jams/           # Anotaciones JAMS
-│── src/            # Código fuente del proyecto
-│── notebooks/      # Jupyter Notebooks
-│── requirements.txt
-│── README.md
-│── .gitignore
-│── main.py
+CHORD_PROGRESSION_GENERATOR/
+│
+├── data/
+│   ├── patterns/   # Archivos .mid que se generan
+│   ├── wav/        # Archivos .wav convertidos
+│   └── jams/       # Archivos .jams con anotaciones
+│
+├── notebooks/
+│   └── chord_progressions.ipynb
+│
+├── src/
+│   ├── __init__.py
+│   ├── config.py           # Configuración global (rutas de carpetas, etc.)
+│   ├── midi_generation.py  # Funciones para generar MIDI
+│   ├── audio_conversion.py # Funciones para convertir MIDI a WAV, etc.
+│   ├── jams_creation.py    # Funciones para generar JAMS
+│   ├── chord_logic.py      # Lógica de acordes y progresiones
+│   └── utils.py            # Funciones de utilidad, helper scripts
+│
+├── main.py                 # Punto de entrada si quisiéramos un CLI
+├── requirements.txt
+├── README.md
+└── .gitignore
+
 ```
