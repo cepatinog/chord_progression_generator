@@ -1,0 +1,6 @@
+numpy
+midiutil
+jams
+scipy
+librosa
+matplotlib
