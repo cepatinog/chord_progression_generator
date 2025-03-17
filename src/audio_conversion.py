@@ -1,20 +1,56 @@
+#!/usr/bin/env python
+
 import subprocess
 from pathlib import Path
-from .config import WAV_DIR
+# Importamos variables globales desde config.py
+from .config import MIDI_DIR, WAV_DIR, DEFAULT_SAMPLE_RATE
 
-def midi_to_wav(midi_path, wav_name):
+def midi_to_wav(midi_file: Path, sample_rate: int = DEFAULT_SAMPLE_RATE) -> Path:
     """
-    Convierte un archivo MIDI a WAV usando Timidity o Fluidsynth.
-    """
-    WAV_DIR.mkdir(parents=True, exist_ok=True)
-    output_wav = WAV_DIR / wav_name
+    Convierte un archivo MIDI a formato WAV usando Timidity y lo coloca en WAV_DIR.
 
-    # Ejemplo con timidity
+    :param midi_file: Path absoluto o relativo del archivo .mid.
+    :param sample_rate: Frecuencia de muestreo (por defecto la de config.py).
+    :return: Ruta absoluta al archivo .wav generado.
+    """
+    # Nombre base sin extensión
+    base_name = midi_file.stem
+    # Construct la ruta final en WAV_DIR
+    wav_file = WAV_DIR / f"{base_name}.wav"
+    wav_file.parent.mkdir(parents=True, exist_ok=True)
+
+    # Ejecutamos timidity:
+    #  -Ow1 => salida WAV con 16 bits
+    #  -s <sample_rate> => tasa de muestreo
+    #  -o => archivo de salida
     subprocess.call([
         'timidity',
-        str(midi_path),
+        str(midi_file),
         '-Ow1',
-        '-s', '16k',
-        '-o', str(output_wav)
+        '-s', str(sample_rate),
+        '-o', str(wav_file)
     ])
-    return output_wav
+
+    return wav_file
+
+
+def convert_all_mid_in_folder(folder: Path):
+    """
+    Convierte todos los archivos .mid en la carpeta dada a formato WAV y
+    los guarda en WAV_DIR, conservando la estructura de subcarpetas.
+
+    :param folder: Ruta de la carpeta donde se encuentran archivos .mid.
+    """
+    if not folder.exists():
+        print(f"No existe la carpeta {folder}")
+        return
+
+    mid_files = list(folder.rglob("*.mid"))
+    if not mid_files:
+        print(f"No hay archivos .mid en {folder}")
+        return
+
+    for mf in mid_files:
+        # Convertir y avisar
+        output = midi_to_wav(mf)
+        print(f"Convertido: {mf} => {output}")

@@ -12,6 +12,6 @@ __pycache__/
 *.wav
 
 # Ignorar archivos grandes que no deberían subirse a Git
-patterns/
-wav/
-jams/
+
+data/wav/
+
