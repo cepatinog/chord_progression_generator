@@ -48,8 +48,15 @@ def create_jams_file(
         start_time += duration_per_chord
 
     # Guardamos la secuencia de numerales romanos en sandbox
-    chord_annotation.sandbox["roman_numerals"] = roman_sequence
-    chord_annotation.sandbox["key"] = key  # opcional, por si quieres registrar la tonalidad
+    #chord_annotation.sandbox["roman_numerals"] = roman_sequence
+    #chord_annotation.sandbox["key"] = key  # opcional, por si quieres registrar la tonalidad
+
+    my_sandbox = jams.Sandbox()
+    my_sandbox.roman_numerals = roman_sequence
+    my_sandbox.key = key
+
+    chord_annotation.sandbox = my_sandbox
+    jam.annotations.append(chord_annotation)
 
     # Agregamos la anotación de acordes al jam
     jam.annotations.append(chord_annotation)
