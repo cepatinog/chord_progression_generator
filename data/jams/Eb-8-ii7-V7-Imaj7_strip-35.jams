@@ -1,0 +1,59 @@
+{
+  "annotations": [
+    {
+      "annotation_metadata": {
+        "curator": {
+          "name": "",
+          "email": ""
+        },
+        "annotator": {},
+        "version": "",
+        "corpus": "",
+        "annotation_tools": "",
+        "annotation_rules": "",
+        "validation": "",
+        "data_source": ""
+      },
+      "namespace": "chord",
+      "data": [
+        {
+          "time": 0.0,
+          "duration": 2.0,
+          "value": "F:min7",
+          "confidence": null
+        },
+        {
+          "time": 2.0,
+          "duration": 2.0,
+          "value": "A#:7",
+          "confidence": null
+        },
+        {
+          "time": 4.0,
+          "duration": 2.0,
+          "value": "C:maj",
+          "confidence": null
+        }
+      ],
+      "sandbox": {
+        "roman_numerals": [
+          "ii7",
+          "V7",
+          "Imaj7"
+        ],
+        "key": "Eb"
+      },
+      "time": 0,
+      "duration": null
+    }
+  ],
+  "file_metadata": {
+    "title": "ii7-V7-Imaj7",
+    "artist": "",
+    "release": "",
+    "duration": 6.0,
+    "identifiers": {},
+    "jams_version": "0.3.4"
+  },
+  "sandbox": {}
+}
