@@ -5,114 +5,168 @@ Módulo: roman_to_chord
 ----------------------
 Provee funciones para mapear un numeral romano (I, ii, V7, etc.)
 a una etiqueta de acorde compatible con JAMS (p.ej. 'C:maj7', 'D:min7', 'G:7'),
-según una tonalidad mayor básica.
+para tonalidades mayores o menores, permitiendo notación # y b en la tónica.
 """
 
-# Diccionario de notas en semitonos (C = 0, C# = 1, D = 2, ...)
-# Aquí se asume una sola forma de nomenclatura #. Podrías expandirlo si necesitas bemoles.
+
+# 1) Diccionarios básicos de notas
+
+# Notas con sostenido y bemol, mapeando a semitonos 0..11
 NOTE_TO_INT = {
-    "C": 0,  "C#": 1,  "D": 2,  "D#": 3,  "E": 4,  "F": 5,
-    "F#": 6, "G": 7,  "G#": 8,  "A": 9,  "A#": 10, "B": 11
+    "C": 0,   "C#": 1,  "Db": 1,
+    "D": 2,   "D#": 3,  "Eb": 3,
+    "E": 4,   "Fb": 4,  # 'Fb' = E
+    "F": 5,   "E#": 5,  # 'E#' = F
+    "F#": 6,  "Gb": 6,
+    "G": 7,   "G#": 8,  "Ab": 8,
+    "A": 9,   "A#": 10, "Bb": 10,
+    "B": 11,  "Cb": 11, # 'Cb' = B
+    "B#": 0   # 'B#' = C
 }
 
-# Si deseas permitir notación bemol, puedes duplicar con alias:
-# NOTE_TO_INT["Db"] = 1
-# NOTE_TO_INT["Eb"] = 3
-# ...
+# Transformación inversa (0..11 -> una forma de notación)
+# Escogemos la forma # como principal
+INT_TO_NOTE = {
+    0: "C",   1: "C#",  2: "D",   3: "D#",
+    4: "E",   5: "F",   6: "F#",  7: "G",
+    8: "G#",  9: "A",  10: "A#", 11: "B"
+}
 
-# Inversa para volver de semitonos a nota con sostenido
-INT_TO_NOTE = {v: k for k, v in NOTE_TO_INT.items()}
 
-# Escala mayor en semitonos: I=0, II=2, III=4, IV=5, V=7, VI=9, VII=11
-MAJOR_SCALE_INTERVALS = [0, 2, 4, 5, 7, 9, 11]
+# 2) Escalas para tonalidad mayor/menor
+
+MAJOR_SCALE_INTERVALS = [0, 2, 4, 5, 7, 9, 11]  # I, II, III, IV, V, VI, VII
+NATURAL_MINOR_INTERVALS = [0, 2, 3, 5, 7, 8, 10]  # i, ii°, III, iv, v, VI, VII
+
+def parse_key(key_str: str):
+    """
+    Dado un string de tonalidad (ej. 'C', 'Am', 'Abm', 'F#', etc.),
+    retorna (root_int, scale_type), donde:
+      - root_int es el semitono base (0..11)
+      - scale_type es 'major' o 'minor'
+    Si la clave no se reconoce, fallback -> (0, 'major') => C mayor.
+    """
+    # Ejemplos: "Am" => root="A", minor
+    #           "C" => root="C", major
+    #           "F#m" => root="F#", minor
+    #           "Abm" => root="Ab", minor
+    # Verificamos si termina en 'm'
+    k = key_str.strip()
+    if k.lower().endswith("m"):
+        # Tonalidad menor
+        root_part = k[:-1]  # todo menos la 'm'
+        scale_type = "minor"
+    else:
+        root_part = k
+        scale_type = "major"
+
+    root_part = root_part.strip()
+    # Convertimos la raíz a semitonos
+    if root_part not in NOTE_TO_INT:
+        # fallback
+        return 0, "major"  # C mayor
+    root_int = NOTE_TO_INT[root_part]
+
+    return root_int, scale_type
+
+def get_scale_intervals(scale_type: str):
+    """
+    Retorna la lista de semitonos para la escala (major o minor).
+    Por simplicidad, solo manejamos mayor o menor natural.
+    """
+    if scale_type == "minor":
+        return NATURAL_MINOR_INTERVALS
+    # default => major
+    return MAJOR_SCALE_INTERVALS
+
+
+# 3) Lógica para parsear numeral romano
 
 def roman_to_chord_label(roman: str, key: str = "C") -> str:
     """
-    Convierte un numeral romano (por ej. 'I', 'ii', 'V', 'vii', etc.)
+    Convierte un numeral romano (por ej. 'I', 'ii', 'V7', 'iv,7', etc.)
     a una etiqueta de acorde JAMS (por ej. 'C:maj7', 'D:min7', 'G:7'),
-    asumiendo una tonalidad mayor simplificada.
+    asumiendo la tonalidad dada (p. ej. 'A', 'Am', 'Eb', 'F#m').
 
-    Ejemplos de uso:
-        roman_to_chord_label("I", "C")   -> "C:maj"
-        roman_to_chord_label("V7", "F")  -> "C:7"
-        roman_to_chord_label("ii", "G")  -> "A:min"
-    
-    Notas:
-    - Por simplicidad, asumimos que la tonalidad es mayor
-      y que las extensiones de séptima siguen la costumbre jazz (dominantes en V).
-    - No se manejan alteraciones (#, b) en el numeral. 
-    - El mapeo a "maj7", "min7", etc. es limitado y demostrativo.
+    Ejemplo:
+        roman_to_chord_label("I", "C")     -> "C:maj"
+        roman_to_chord_label("V7", "F")    -> "C:7"
+        roman_to_chord_label("ii,7", "G")  -> "A:min7"
+        roman_to_chord_label("i", "Am")    -> "A:min"
+        roman_to_chord_label("VII", "Ab")  -> "Eb:maj"
     """
 
-    # 1) Determinar índice en la escala mayor: I=0, II=1, III=2, IV=3, V=4, VI=5, VII=6
-    #    - uppercase => mayor, lowercase => menor
-    #    - chequeo si hay '7'
-    #    - etc.
-    roman_clean = roman.strip()  # p.ej. "V7"
-    
-    # Extraemos cualquier sufijo (p.ej. '7', 'maj7') que el usuario ponga en el numeral
-    # y definimos la triada base y su séptima si procede.
-    # Ej: "V7" => base "V" + '7'
-    #     "ii" => base "ii", sin sufijo
-    # Nota: Este parse es *muy* simplificado.
-    suffix = ""
-    for possible_suffix in ["7", "maj7", "min7"]:  
-        # Podrías ampliarlo con "dim7", "hdim7", "9", "11", etc.
-        if roman_clean.endswith(possible_suffix):
-            suffix = possible_suffix
-            roman_clean = roman_clean.replace(possible_suffix, "")
-            break
+    # 1) Parse tonalidad -> (root_int, scale_type)
+    root_key_int, scale_type = parse_key(key)
 
-    # Para indexar la escala:
-    # I -> 0, II -> 1, III -> 2, IV -> 3, V -> 4, VI -> 5, VII -> 6
-    # i -> 0, ii -> 1, iii -> 2, ...
-    base_roman = roman_clean.lower()  # "i", "v", etc.
+    # 2) Definir la escala
+    scale_intervals = get_scale_intervals(scale_type)
+
+    # 3) Parse numeral: base + sufijo (7, maj7, etc.)
+    #   e.g. "V7" => base="V", sufijo="7"
+    #   e.g. "ii,7" => base="ii", sufijo="7"
+    #   e.g. "Imaj7" => base="I", sufijo="maj7"
+    r = roman.strip().lower()  # para manipular
+    suffix = ""
+
+    # Busca sufijo por si hay coma
+    # p.ej. "ii,7" => "ii" + "7"
+    if "," in r:
+        base_part, suffix = r.split(",", 1)
+        base_part = base_part.strip()
+        suffix = suffix.strip()
+    else:
+        # Si no hay coma, vemos si endswith
+        possible_suffixes = ["7", "maj7", "min7", "dim7", "hdim7"]
+        # Buscamos si hay uno de estos sufijos
+        # (ej. "V7" => base="v", suffix="7")
+        found_suf = None
+        for suf in possible_suffixes:
+            if r.endswith(suf):
+                found_suf = suf
+                break
+        if found_suf:
+            suffix = found_suf
+            # Remover el sufijo
+            base_part = r[: -len(suffix)].strip()
+        else:
+            base_part = r
+
+    # Chequeamos uppercase -> major triad, lowercase -> minor triad
+    # mapeo: I=0, II=1, III=2, IV=3, V=4, VI=5, VII=6
+    # Por si hay algo como "VII", "iii"
     roman_map = {"i":0, "ii":1, "iii":2, "iv":3, "v":4, "vi":5, "vii":6}
-    if base_roman not in roman_map:
-        # Caso no contemplado -> fallback
+    # fallback
+    if base_part not in roman_map:
         return "C:maj"
 
-    scale_index = roman_map[base_roman]
+    scale_index = roman_map[base_part]
 
-    # 2) Hallar la nota en semitonos que corresponde
-    #    a la fundamental del acorde en la tonalidad "key"
-    key = key.strip()
-    if key not in NOTE_TO_INT:
-        # fallback a C si el user da un key no reconocido
-        root_key_int = 0
-    else:
-        root_key_int = NOTE_TO_INT[key]
-    
-    # El offset en la escala mayor:
-    offset = MAJOR_SCALE_INTERVALS[scale_index]
+    # 4) Hallar semitonos de la raíz del acorde
+    offset = scale_intervals[scale_index]
     chord_root_int = (root_key_int + offset) % 12
 
-    # 3) Determinar si es mayor o menor 
-    #    - uppercase roman => mayor
-    #    - lowercase roman => menor
-    # Chequeamos la original 'roman' para ver si era upper/lower
-    # EJ: "ii" => minor, "V" => major
-    is_major = roman[0].isupper()
+    # 5) Triada base: uppercase => mayor, lowercase => menor
+    # OJO: base_part es minúscula siempre, pues hicimos r.lower()
+    # Debemos ver si en la original 'roman' estaba uppercase
+    # -> check first char
+    is_upper = roman.strip()[0].isupper()
 
-    # 4) Construir la etiqueta de triada
-    # JAMS requiere p.ej. "D:maj" o "A:min"
-    note_name = INT_TO_NOTE[chord_root_int]  # p.ej. 2 => 'D'
-    if is_major:
-        base_qual = "maj"
+    if is_upper:
+        triad_qual = "maj"
     else:
-        base_qual = "min"
+        triad_qual = "min"
 
-    chord_label = f"{note_name}:{base_qual}"  # "D:maj" o "A:min"
+    # Nombre de la nota => e.g. 2 => "D"
+    note_name = INT_TO_NOTE[chord_root_int]
+    chord_label = f"{note_name}:{triad_qual}"
 
-    # 5) Manejo del sufijo (p.ej. "7", "maj7", etc.)
-    #    - Este paso es *demostrativo*. Podrías mapear 
-    #      "V7" => "G:7", 
-    #      "Imaj7" => "C:maj7", etc.
+    # 6) Extender sufijo (7, maj7, min7, etc.)
+    # Ej. si suffix="7" y triad_qual="maj" => "C:7"
+    #     si suffix="7" y triad_qual="min" => "A:min7"
+    #     si suffix="maj7" => "C:maj7", etc.
     if suffix == "7":
-        # Si is_major => "C:7", si no => "D:min7"
-        # Nota: en jazz, V7 se asume "dominante".
-        # Si la base era menor + '7', se asume "min7".
-        if is_major:
+        if triad_qual == "maj":
             chord_label = f"{note_name}:7"
         else:
             chord_label = f"{note_name}:min7"
@@ -120,29 +174,41 @@ def roman_to_chord_label(roman: str, key: str = "C") -> str:
         chord_label = f"{note_name}:maj7"
     elif suffix == "min7":
         chord_label = f"{note_name}:min7"
+    elif suffix == "dim7":
+        chord_label = f"{note_name}:dim7"
+    elif suffix == "hdim7":
+        chord_label = f"{note_name}:hdim7"
 
     return chord_label
 
 
 def test_roman_to_chord():
     """
-    Pequeña rutina de pruebas manuales.
+    Pruebas manuales de varios casos.
     """
+
     examples = [
-        ("I", "C"),
-        ("Imaj7", "C"),
-        ("ii", "C"),
-        ("ii7", "C"),
-        ("V", "C"),
-        ("V7", "C"),
-        ("vi", "C"),
-        ("iii", "G"),
-        ("VII", "D"),  # D => [0,2,4,5,7,9,11] => VII => offset=11 => C#:maj
+        # Tonalidad mayor
+        ("I", "C"),      # => "C:maj"
+        ("V7", "F"),     # => "C:7"
+        ("ii,7", "G"),   # => "A:min7"
+        ("VI", "G"),     # => "E:maj"
+        ("iii,maj7", "D"),  # => "F#:maj7"
+        # Tonalidad menor
+        ("i", "Am"),     # => "A:min"
+        ("vii", "Am"),   # => "G:maj" (en la nat. menor, 9 + 10?)
+        ("vii,7", "Am"), # => "G:7" => minimal dominantes
+        # Bemoles
+        ("I", "Ab"),     # => "Ab:maj"
+        ("IV,7", "Eb"),  # => "Ab:7"
+        # Sufijos
+        ("v,7", "Cm"),   # => relativo a ?
+        ("ii,7", "Bb"),  # => "C:min7"?
     ]
 
-    for roman, key in examples:
-        label = roman_to_chord_label(roman, key)
-        print(f"roman_to_chord_label({roman}, {key}) => {label}")
+    for roman, key_name in examples:
+        label = roman_to_chord_label(roman, key_name)
+        print(f"roman_to_chord_label({roman}, {key_name}) => {label}")
 
 if __name__ == "__main__":
     test_roman_to_chord()

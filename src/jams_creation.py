@@ -56,7 +56,6 @@ def create_jams_file(
     my_sandbox.key = key
 
     chord_annotation.sandbox = my_sandbox
-    jam.annotations.append(chord_annotation)
 
     # Agregamos la anotación de acordes al jam
     jam.annotations.append(chord_annotation)

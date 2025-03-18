@@ -37,7 +37,7 @@ def midi_to_wav(midi_file: Path, sample_rate: int = DEFAULT_SAMPLE_RATE) -> Path
 def convert_all_mid_in_folder(folder: Path):
     """
     Convierte todos los archivos .mid en la carpeta dada a formato WAV y
-    los guarda en WAV_DIR, conservando la estructura de subcarpetas.
+    los guarda en WAV_DIR.
 
     :param folder: Ruta de la carpeta donde se encuentran archivos .mid.
     """
