@@ -13,5 +13,5 @@ __pycache__/
 
 # Ignorar archivos grandes que no deberían subirse a Git
 
-data/wav/
+data/
 
