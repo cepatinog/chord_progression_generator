@@ -8,7 +8,16 @@ from .config import MIDI_DIR
 NOTE_ARRAY = ["C", "C#", "D", "Eb", "E", "F",
               "F#", "G", "Ab", "A", "Bb", "B"]
 OCTAVE_ARRAY = [1, 2, 3, 4, 5, 6, 7, 8]
-ALTERATIONS_ARR = ["7", "7b5", "7#5", "maj7", "maj7b5", "maj7#5"]
+
+# ALTERATIONS_ARR = ["7", "7b5", "7#5", "maj7", "maj7b5", "maj7#5"]
+
+ALTERATIONS_ARR = [
+    "min", "maj", "dim", "aug",
+    "min6", "maj6",
+    "min7", "minmaj7", "maj7", "7", "dim7", "hdim7",
+    "sus2", "sus4"
+]
+
 
 def baseChords(firstNote, numeral):
     """
@@ -37,28 +46,83 @@ def raiseNote(note1, note2, note3, raiseVal):
     elif raiseVal == "b":
         return note1 - 1, note2 - 1, note3 - 1
 
+# def chordAlteration(note1, note2, note3, ext):
+#     """
+#     Dado un acorde triada y una extensión (7, maj7, 7#5, etc.),
+#     genera un acorde de cuatro notas (tetrad).
+#     """
+#     if ext == "7":
+#         note4 = note3 + 3
+#     elif ext == "7b5":
+#         note3 -= 1
+#         note4 = note3 + 4
+#     elif ext == "7#5":
+#         note3 += 1
+#         note4 = note3 + 4
+#     elif ext == "maj7":
+#         note4 = note3 + 4
+#     elif ext == "maj7b5":
+#         note3 -= 1
+#         note4 = note3 + 4
+#     elif ext == "maj7#5":
+#         note3 += 1
+#         note4 = note3 + 4
+#     return note1, note2, note3, note4
+
 def chordAlteration(note1, note2, note3, ext):
     """
-    Dado un acorde triada y una extensión (7, maj7, 7#5, etc.),
-    genera un acorde de cuatro notas (tetrad).
+    Dado un acorde triada y una extensión (ext), genera un acorde de cuatro notas (tetrad)
+    o ajusta la triada si es necesario (p. ej. para sus2, sus4, etc.).
     """
     if ext == "7":
         note4 = note3 + 3
-    elif ext == "7b5":
-        note3 -= 1
-        note4 = note3 + 4
-    elif ext == "7#5":
-        note3 += 1
-        note4 = note3 + 4
     elif ext == "maj7":
         note4 = note3 + 4
-    elif ext == "maj7b5":
+    elif ext == "min7":
+        note4 = note3 + 3
+    elif ext == "minmaj7":
+        note4 = note3 + 4
+    elif ext == "dim7":
+        note2 -= 1
+        note3 -= 1
+        note4 = note3 + 3
+    elif ext == "hdim7":
+        note2 -= 1
         note3 -= 1
         note4 = note3 + 4
-    elif ext == "maj7#5":
-        note3 += 1
+    elif ext == "min6":
+        note4 = note3 + 5
+    elif ext == "maj6":
         note4 = note3 + 4
+    elif ext == "sus2":
+        note2 = note1 + 2
+        note3 = note1 + 7
+        return note1, note2, note3  # triada
+    elif ext == "sus4":
+        note2 = note1 + 5
+        note3 = note1 + 7
+        return note1, note2, note3  # triada
+    elif ext == "dim":
+        note2 = note1 + 3
+        note3 = note2 + 3
+        return note1, note2, note3
+    elif ext == "aug":
+        note2 = note1 + 4
+        note3 = note2 + 4
+        return note1, note2, note3
+    elif ext == "maj":
+        note2 = note1 + 4
+        note3 = note2 + 3
+        return note1, note2, note3
+    elif ext == "min":
+        note2 = note1 + 3
+        note3 = note2 + 4
+        return note1, note2, note3
+    else:
+        raise ValueError(f"[chordAlteration] Sufijo no reconocido: {ext}")
+
     return note1, note2, note3, note4
+
 
 def chordInversions3(note1, note2, note3, inv):
     """
@@ -160,14 +224,23 @@ def generate_progression(progression: str, name: str, output_dir=MIDI_DIR, tempo
 
                     # Si existe una tercera parte => ext (p.ej. '7')
                     if len(numeralArr) == 3 and numeralArr[2] in ALTERATIONS_ARR:
-                        note1, note2, note3, note4 = chordAlteration(note1, note2, note3, numeralArr[2])
-                        chord = (note1, note2, note3, note4)
+                        # note1, note2, note3, note4 = chordAlteration(note1, note2, note3, numeralArr[2])
+                        # chord = (note1, note2, note3, note4)
+                        chord = chordAlteration(note1, note2, note3, numeralArr[2])
+
                 elif token in ALTERATIONS_ARR:
                     # Tetrad directa
-                    note1, note2, note3, note4 = chordAlteration(note1, note2, note3, token)
-                    chord = (note1, note2, note3, note4)
+                    # note1, note2, note3, note4 = chordAlteration(note1, note2, note3, token)
+                    # chord = (note1, note2, note3, note4)
+
+                    chord_result = chordAlteration(note1, note2, note3, token)
+                    chord = chord_result  # puede tener 3 o 4 notas
+
+
+
                 else:
-                    raise ValueError("Unrecognized token after comma.")
+                    raise ValueError(f"[generate_progression] Token no reconocido: {token} en numeral {numeral}")
+
 
             chordArr.append(chord)
 
