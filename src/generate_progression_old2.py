@@ -7,7 +7,7 @@ import json
 from .config import MIDI_DIR
 
 NOTE_ARRAY = ["C", "C#", "D", "Eb", "E", "F",
-              "F#", "G", "Ab", "A", "Bb", "B"]
+              "F#", "G", "Ab", "A", "Bb", "B"   ]
 OCTAVE_ARRAY = [2, 3, 4, 5, 6]
 
 ALTERATIONS_ARR = [
@@ -89,11 +89,6 @@ def chordInversions3(note1, note2, note3, inv):
     elif inv == 2:
         note1 += 12
         note2 += 12
-    elif inv == 3:
-        # octava: subir las tres notas
-        note1 += 12
-        note2 += 12
-        note3 += 12
     return note1, note2, note3
 
 def chordInversions4(note1, note2, note3, note4, inv):
@@ -158,10 +153,9 @@ def generate_progression(progression: str, name: str, output_dir=MIDI_DIR, tempo
 
         num = 0
         if len(chordArr) == 3:
-            num_inversions = 4 if len(chordArr[0]) == 3 else 4  # triadas con octava adicional
-            for c1 in range(num_inversions):
-                for c2 in range(num_inversions):
-                    for c3 in range(num_inversions):
+            for c1 in range(len(chordArr[0])):
+                for c2 in range(len(chordArr[1])):
+                    for c3 in range(len(chordArr[2])):
                         MyMIDI = MIDIFile(1)
                         MyMIDI.addTempo(track, 0, tempo)
                         timeOffset = 0
@@ -182,11 +176,10 @@ def generate_progression(progression: str, name: str, output_dir=MIDI_DIR, tempo
                         num += 1
 
         elif len(chordArr) == 4:
-            num_inversions = 4
-            for c1 in range(num_inversions):
-                for c2 in range(num_inversions):
-                    for c3 in range(num_inversions):
-                        for c4 in range(num_inversions):
+            for c1 in range(len(chordArr[0])):
+                for c2 in range(len(chordArr[1])):
+                    for c3 in range(len(chordArr[2])):
+                        for c4 in range(len(chordArr[3])):
                             MyMIDI = MIDIFile(1)
                             MyMIDI.addTempo(track, 0, tempo)
                             timeOffset = 0
@@ -206,6 +199,7 @@ def generate_progression(progression: str, name: str, output_dir=MIDI_DIR, tempo
                             durations_dict[filename] = durations
                             num += 1
 
+    # Guardar todas las duraciones
     durations_path = output_path / "durations.json"
     with open(durations_path, "w") as f:
         json.dump(durations_dict, f, indent=2)
