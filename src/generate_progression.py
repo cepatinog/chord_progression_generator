@@ -8,7 +8,7 @@ from .config import MIDI_DIR
 
 NOTE_ARRAY = ["C", "C#", "D", "Eb", "E", "F",
               "F#", "G", "Ab", "A", "Bb", "B"]
-OCTAVE_ARRAY = [2, 3, 4, 5, 6]
+OCTAVE_ARRAY = [2, 3, 4, 5]
 
 ALTERATIONS_ARR = [
     "min", "maj", "dim", "aug",
