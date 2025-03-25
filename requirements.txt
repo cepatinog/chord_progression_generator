@@ -4,5 +4,5 @@ jams
 scipy
 librosa
 matplotlib
-timidiy
+timidity
 
