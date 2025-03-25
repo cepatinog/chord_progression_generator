@@ -148,13 +148,22 @@ def generate_progression(progression: str, name: str, output_dir=MIDI_DIR, tempo
         channel = 0
         volume = 100
 
+        def random_velocity():
+            return random.randint(60, 127)  # rango expresivo, evita notas muy suaves (< 60)
+
         def random_duration():
             return round(random.uniform(0.5, 2.0), 2)
 
+        # def add_chord(MyMIDI, inv, timeOffset, duration):
+        #     for note in inv:
+        #         MyMIDI.addNote(track, channel, note, timeOffset, duration, volume)
+        #     return duration
+        
         def add_chord(MyMIDI, inv, timeOffset, duration):
             for note in inv:
-                MyMIDI.addNote(track, channel, note, timeOffset, duration, volume)
-            return duration
+                velocity = random_velocity()
+                MyMIDI.addNote(track, channel, note, timeOffset, duration, velocity)
+            return duration 
 
         num = 0
         if len(chordArr) == 3:
